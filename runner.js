@@ -520,17 +520,96 @@ var random = function (n) {
 
 var direction;
 
+let previousDirection = Direction.STOP;
+let currentDirection;
+
 var DirectionSolver = function (board) {
   return {
     /**
      * @return next hero action
      */
     get: function () {
-      var bomberman = board.getBomberman();
+      let bomberman = board.getBomberman();
 
-      // TODO your code here
+      let leftIsClear = board.isAt(
+        bomberman.getX() - 1,
+        bomberman.getY(),
+        Element.NONE
+      );
 
-      return Direction.ACT;
+      let rightIsClear = board.isAt(
+        bomberman.getX() + 1,
+        bomberman.getY(),
+        Element.NONE
+      );
+
+      let upIsClear = board.isAt(
+        bomberman.getX(),
+        bomberman.getY() + 1,
+        Element.NONE
+      );
+
+      let downIsClear = board.isAt(
+        bomberman.getX(),
+        bomberman.getY() - 1,
+        Element.NONE
+      );
+
+      if (leftIsClear && previousDirection.toString() !== "right") {
+        currentDirection = Direction.LEFT;
+      } else if (upIsClear && previousDirection.toString() !== "down") {
+        currentDirection = Direction.UP;
+      } else if (downIsClear) {
+        currentDirection = Direction.DOWN;
+      } else if (rightIsClear) {
+        currentDirection = Direction.RIGHT;
+      } else {
+        currentDirection = Direction.STOP;
+      }
+
+      let directionIsClear = false;
+
+      if (currentDirection.toString() === "left") {
+        directionIsClear =
+          board.isAt(bomberman.getX() - 1, bomberman.getY(), Element.NONE) &&
+          board.isAt(bomberman.getX() - 2, bomberman.getY(), Element.NONE);
+      } else if (currentDirection.toString() === "up") {
+        directionIsClear =
+          board.isAt(bomberman.getX(), bomberman.getY() + 1, Element.NONE) &&
+          board.isAt(bomberman.getX(), bomberman.getY() + 2, Element.NONE);
+      } else if (currentDirection.toString() === "down") {
+        directionIsClear =
+          board.isAt(bomberman.getX(), bomberman.getY() - 1, Element.NONE) &&
+          board.isAt(bomberman.getX(), bomberman.getY() - 2, Element.NONE);
+      } else if (currentDirection.toString() === "right") {
+        directionIsClear =
+          board.isAt(bomberman.getX() + 1, bomberman.getY(), Element.NONE) &&
+          board.isAt(bomberman.getX() + 2, bomberman.getY(), Element.NONE);
+      }
+
+      let destroyableIsNear =
+        board.countNear(
+          bomberman.getX(),
+          bomberman.getY(),
+          Element.DESTROYABLE_WALL
+        ) > 0 ||
+        board.countNear(
+          bomberman.getX(),
+          bomberman.getY(),
+          Element.OTHER_BOMBERMAN
+        ) > 0 ||
+        board.countNear(
+          bomberman.getX(),
+          bomberman.getY(),
+          Element.MEAT_CHOPPER
+        ) > 0;
+
+      if (directionIsClear && destroyableIsNear) {
+        return [Direction.ACT, currentDirection];
+      } else {
+        previousDirection = currentDirection;
+        return currentDirection;
+      }
     },
   };
 };
